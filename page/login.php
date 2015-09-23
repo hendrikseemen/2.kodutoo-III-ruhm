@@ -60,11 +60,11 @@
 				
 				//kontrollin kas tulemusi leiti
 				if($stmt->fetch()){
-					//ab'i oli midagi
+					//leidis andmebaasist
 					echo "Email ja parool õiged, kasutaja id=".$id_from_db;
 					
 				}else{
-					//ei leidnud
+					//ei leidnud andmebaasist
 					echo "wrong credentails!";
 					
 				}
