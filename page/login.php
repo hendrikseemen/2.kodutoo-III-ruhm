@@ -4,7 +4,7 @@
 	// LOGIN.PHP
 	
 	// loon andmebaasi ühenduse
-	require_once("../config.php");
+	require_once("../../config.php");
 	$database = "if15_hendrik7";
 	$mysqli = new mysqli($servername, $username, $password, $database);
 	
@@ -17,7 +17,6 @@
 	
 	//muutujad andmebaasi väärtuste jaoks
 	
-	$name = "";
 	$email = "";
 	$username = "";
 	$fullname ="";
@@ -29,7 +28,7 @@
 		// LOGI SISSE
 		
 		if (isset($_POST["login"])) {
-			echo "vajutas logi sisse";
+			
 			//kontrollin, et e-post ei ole tühi
 			if (empty($_POST["email"])) {
 				$email_error = "See väli on kohustuslik";
@@ -45,7 +44,33 @@
 				$password = test_input($_POST["password"]);				
 			}
 			
+			// võib sisse logida
 			
+			if($password_error == "" && $email_error == ""){
+				echo "Võib sisse logida! Kasutajanimi on ".$email." ja parool on ".$password;
+				
+				$hash = hash("sha512", $password);
+				
+				$stmt = $mysqli->prepare("SELECT id, email FROM users WHERE email=? AND password=?");
+				$stmt->bind_param("ss", $email, $hash);
+				
+				//muutujad tulemustele
+				$stmt->bind_result($id_from_db, $email_from_db);
+				$stmt->execute();
+				
+				//kontrollin kas tulemusi leiti
+				if($stmt->fetch()){
+					//ab'i oli midagi
+					echo "Email ja parool õiged, kasutaja id=".$id_from_db;
+					
+				}else{
+					//ei leidnud
+					echo "wrong credentails!";
+					
+				}
+				
+				$stmt->close();
+			}
 			
 		}
 		
@@ -53,7 +78,7 @@
 		
 		elseif (isset($_POST["create"])) //registration field errors
 		{
-			echo "vajutas sisesta nuppu";
+			
 			
 			if (empty($_POST["username"])) {
 				$name_error = "See väli on kohustuslik";	
@@ -67,7 +92,7 @@
 			if (empty($_POST["fullname"])) {
 				$name_error = "See väli on kohustuslik";	
 			} else {
-				$fullname = test_input($_POST["full"]);
+				$fullname = test_input($_POST["fullname"]);
 			}
 			
 			
@@ -93,13 +118,30 @@
 					
 					$create_password_error = "Peab olema vähemalt 8 tähemärki pikk";
 				
+				}else{
+					$create_password = test_input($_POST["create_password"]);
 				}
 				
 			}
 			
 			if ($name_error == ""){
-				echo "salvestasin andmebaasi ".$name;
+				echo "salvestasin andmebaasi ".$username;
 			}
+			
+			if(	$create_email_error == "" && $create_password_error == "" && $name_error == ""){
+				
+				$hash = hash("sha512", $create_password);
+				echo "Kasutaja on loodud! Registreeritud e-mail on ".$create_email.", kasutajanimi on ".$username." ja parool on ".$create_password."ja räsi on ".$hash;
+				
+				// salvestame andmebaasi
+				$stmt = $mysqli->prepare("INSERT INTO users (email, password, username, fullname) VALUES (?, ?, ?, ?)");
+				
+				// asendame ? märgid, ssss - s on string email, s on string password, s on string username, s on string fullname
+				$stmt->bind_param("ssss", $create_email, $hash, $username, $fullname);
+				$stmt->execute();
+				$stmt->close();
+			}
+			
 		}
 		
 	}	
